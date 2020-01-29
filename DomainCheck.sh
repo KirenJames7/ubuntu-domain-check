@@ -1,7 +1,21 @@
 #!/bin/bash
 #----AUTHOR:----------Kiren James
 #----CONTRIBUTORS:----Kiren James
-
+#
+# ===================================================================
+# CONFIG - Only edit the below lines to setup the script
+# ===================================================================
+#
+# Company & Domain settings
+DOMAIN_NAME="<Company-Domain-Name>"
+USER_COUNT=<Number-Of-User-Accounts>
+WIFI_NAME="<Company-WiFi-Name>"
+#
+# ===================================================================
+# DO NOT EDIT BELOW THIS LINE UNLESS YOU KNOW WHAT YOU ARE DOING
+# ===================================================================
+#
+# FUNCTIONS START HERE
 function displayHostName {
 	# Write the currenly set hostname
 	hostname=`hostname`
@@ -11,7 +25,7 @@ function displayHostName {
 function domainCheck {
 	# Check if the client is connected to the domain
 	currentdomain=`dnsdomainname`
-	if [ ${currentdomain} == "zone24x7.lk" ]; then
+	if [ ${currentdomain} == ${DOMAIN_NAME} ]; then
 		echo "Connected to domain: ${currentdomain}"
 	else
 		echo "Not connected to domain"
@@ -23,7 +37,7 @@ function listCurrentUsers {
 	# Get users as array
 	users=(`cut -d' ' -f1 /etc/sudoers.d/sudo-users`)
 	
-	if [ ${#users[@]} -ne 3 ]; then
+	if [ ${#users[@]} -ne ${USER_COUNT} ]; then
 		# Inform to check the users if user count is less than usual
 		echo "Check added users:"
 		for user in ${users[@]}
@@ -43,11 +57,11 @@ function listCurrentUsers {
 function wifiCheck {
 	# Get connected wifi SSID
 	connectedwifi=`iwgetid -r`
-	if [ ${connectedwifi} == "~Zone-Lease~" ]; then
+	if [ ${connectedwifi} == ${WIFI_NAME} ]; then
 		echo "WiFi setup complete."
-	elif [ `nmcli c | grep -o ~Zone-Lease~` == "~Zone-Lease~" ]; then # Check if WiFi is saved
+	elif [ `nmcli c | grep -o ${WIFI_NAME}` == ${WIFI_NAME} ]; then # Check if WiFi is saved
 		# Try to connect to WiFi 
-		#nmtui connect "~Zone-Lease~" >/dev/null 2>&1
+		#nmtui connect ${WIFI_NAME} >/dev/null 2>&1
 		echo "Try connecting to WiFi & run command 'wificheck' to test again."
 	else
 		echo "Please re-check WiFi."
@@ -83,15 +97,16 @@ function addWiFiCheckToBashRC {
 		# Create script file
 		touch WiFiCheck.sh
 		# Write scripts to file
+		echo "WIFI_NAME='${WIFI_NAME}'"
 		echo "# Get connected wifi SSID" >> WiFiCheck.sh
 		echo "connectedwifi=`iwgetid -r`" >> WiFiCheck.sh
 		echo "if [ -z ${connectedwifi}  ]; then" >> WiFiCheck.sh
 		echo "# Not connected to wifi" >> WiFiCheck.sh
 		echo "	echo  'Please re-check WiFi'." >> WiFiCheck.sh
-		echo "elif [ -z ${connectedwifi} == '~Zone-Lease~' ]; then" >> WiFiCheck.sh
+		echo "elif [ -z ${connectedwifi} == ${WIFI_NAME} ]; then" >> WiFiCheck.sh
 		echo "# WiFi connected to network" >> WiFiCheck.sh
 		echo "	echo 'WiFi setup complete.'" >> WiFiCheck.sh
-		echo "elif [ `nmcli c | grep -o ~Zone-Lease~` == '~Zone-Lease~' ]; then # Check if WiFi is saved" >> WiFiCheck.sh
+		echo "elif [ `nmcli c | grep -o ${WIFI_NAME}` == ${WIFI_NAME} ]; then # Check if WiFi is saved" >> WiFiCheck.sh
 		echo "# WiFi saved but not connected" >> WiFiCheck.sh
 		echo "	echo 'Try connecting to WiFi & run command wificheck to test again.'" >> WiFiCheck.sh
 		echo "fi" >> WiFiCheck.sh
